@@ -1,0 +1,245 @@
+---
+title: "Stats 332 Assignment 3"
+author: "Junqiao Lin"
+date: "Mar 06, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r,message=FALSE,warning=FALSE}
+library(survey)
+```
+
+## Question 1. 
+
+```{r}
+#importing the dataset
+Q1.dat <- read.csv("tomato.csv")
+Q1.dat <- Q1.dat[!is.na(Q1.dat$mass),]
+```
+
+```{r}
+Q1.trtmean <- tapply(Q1.dat$mass,Q1.dat$treatment, mean)
+Q1.trtsize <- tapply(Q1.dat$mass,Q1.dat$treatment, length)
+Q1.mean <- mean(Q1.trtmean)
+```
+
+a) 
+
+```{r}
+#Calculating SStrt
+Q1.SSTRT = sum(Q1.trtsize*(Q1.trtmean - Q1.mean)^2)
+Q1.SSTRT
+Q1.MSSTrt<-Q1.SSTRT/5
+Q1.MSSTrt
+
+#Cakculating SSres
+Q1.SSTOT = var(Q1.dat$mass)* (sum(Q1.trtsize) - 1)
+Q1.SSRES = Q1.SSTOT - Q1.SSTRT
+Q1.SSTOT
+Q1.SSRES
+Q1.MSSRES<-Q1.SSRES/26
+Q1.MSSRES
+Q1.Fobs <- Q1.MSSTrt/Q1.MSSRES
+Q1.Fobs
+```
+
+
+Hence we can fill out the following ANOVA table:
+$$
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Source & SS & df & MSS & F-stats \\
+\hline
+Treatment & 0.04753454 & 5 &  0.009506908 & 4.38237\\
+Residual & 0.05640318 & 26 &  0.002169353 & \\
+\hline
+Total & 0.1039377 & 31 & & \\
+\hline
+\end{tabular}
+$$
+b)
+
+Under $H_0$ we have $\tau_1 = \tau_2 = ... \tau_6 = 0$ (there is no difference among the six treatment).
+
+```{r}
+qf(0.95, 5, 26)
+```
+
+Since $F_{obs} > 2.58679$, we reject $H_0$ at $\alpha = 0.05$. 
+
+c)
+
+```{r}
+Q1.lst1 <- Q1.dat[which(Q1.dat$treatment=="A1"),]$mass
+Q1.lst2 <- Q1.dat[which(Q1.dat$treatment=="B3"),]$mass
+Q1c.meandiff = mean(Q1.lst1) - mean(Q1.lst2)
+df = 8
+v.hat <- 0.002169353
+
+test <- Q1c.meandiff/sqrt(v.hat*(1/6 + 1/4))
+```
+Note under the t distribution:
+```{r}
+Q1c.meandiff
+qt(c(0.025,0.975),8)
+
+abs(Q1c.meandiff) - 2.306004 *sqrt(v.hat*(1/6 + 1/4)) 
+abs(Q1c.meandiff) + 2.306004 *sqrt(v.hat*(1/6 + 1/4))
+```
+
+Hence the 95% confidence interval for the difference bewteen $A_1$ and $B_3$ is (0.0215036,0.1601631).  From the confidence interval, there is significant evidence that treatment $A_1$ and $B_3$. 
+\newpage
+
+
+```{r}
+#importing the dataset
+Q2.dat <- read.csv("cloth.csv")
+```
+
+a) 
+We can define the following statistical model for the model as the following:
+
+$$
+Y_{ij} = \mu + \tau_i + \beta_j + R_{ij}, \quad i = 1,...,4 \quad j = 1,...,5 \quad R_{ij} \stackrel{i.i.d.}\sim N(0,\sigma^2) 
+$$
+
+Where $\tau_i$ denote the treatment of each chemical and $\beta_j$ denote the block effect from the different bolts of cloth.
+
+Under this model, we are assuming the effect of the cloth being in different bolt would be independent from the effect of the different chemical.
+b)
+
+```{r}
+
+#Overall variance 
+Q2.SSTOT = var(Q2.dat$strength)* 19
+#Sample varaince with treatment
+Q2.SSTrt = var(tapply(Q2.dat$strength,Q2.dat$chemical,mean))* 3
+#Sample varaince with block
+Q2.SSblock = var(tapply(Q2.dat$strength,Q2.dat$bolt,mean))* 4
+
+#Sample varaince with block
+Q2.SSRes = Q2.SSTOT - Q2.SSTrt - Q2.SSblock
+Q2.SSTOT
+Q2.SSTrt
+Q2.SSblock
+Q2.SSRes
+```
+
+Hence we have the following ANOVA table
+
+$$
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Source & SS & df & MSS & F-stats \\
+\hline
+Treatment & 2.59 & 3 &  0.86333 & 0.0691078\\
+Block & 39.25 & 4 &  9.8125 & 0.78547\\
+Residual & 149.91  & 12 &  12.4925 &  \\
+\hline
+Total & 191.75 & 19 & & \\
+\hline
+\end{tabular}
+$$
+Let $H_0: \tau_1 = ... = \tau_4 = 0$, note
+```{r}
+qf(0.95, 3, 19)
+```
+
+Since $F_{obs} < 3.12735$, hence we fail to reject $H_0$ under the significant level of $\alpha = 0.05$
+
+\newpage
+
+#Question 3. 
+
+```{r}
+#importing the dataset
+Q3.dat <- read.csv("tv.csv")
+```
+
+a) 
+We can define the following statistical model for the model as the following:
+
+$$
+Y_{ij} = \mu + \tau_i + \alpha_j + \gamma_{ij}, \quad i = 1,2 \quad j = 1,2 \quad R_{ij}\stackrel{i.i.d.}\sim N(0,\sigma^2) 
+$$
+
+Where $\tau_i$ is the treatment effect from factor A and  $\alpha_j$ is the treatment effect from factor B, (1 being low and 2 being high). $\gamma_{ij}$ denote the interaction effect bewteen Factor A and Factor B. 
+
+b) 
+Alright please don't kill me for using xkcd style graph.
+
+```{r}
+#A bit Lazy :p
+Q3.ll <- mean(Q3.dat[c(1:4),]$conduct)
+Q3.lh <- mean(Q3.dat[c(5:8),]$conduct)
+Q3.hl <- mean(Q3.dat[c(9:12),]$conduct)
+Q3.hh <- mean(Q3.dat[c(13:16),]$conduct)
+
+Q3.dataf=data.frame(facA=factor(c("Low","Low","High","High")),  facB=factor(c("Low","High","Low","High"), levels=c("Low","High")),cond = c(Q3.ll,Q3.lh,Q3.hl,Q3.hh))
+#datalines.pltl <- data.frame(xbegin=c(1),ybegin=c(Q3.ll), xend=c(2), yend=c(Q3.lh))
+#datalines.plth <- data.frame(xbegin=c(1),ybegin=c(Q3.hl), xend=c(2), yend=c(Q3.hh))
+```
+
+```{r,message=FALSE,warning=FALSE}
+library(xkcd)
+library(extrafont)
+```
+```{r}
+windowsFonts("xkcd" = windowsFont("xkcd Script"))
+Q3.plot <- ggplot(data=Q3.dataf, aes(x = facB, y = cond))  + geom_point(aes(shape=facA,colour=facA))  + geom_line(aes(group=facA,colour=facA)) + xkcdaxis(c(0.5,2),c(125,146)) + xlab("Factor B") + ylab("Conductivity")+ scale_colour_discrete(name  ="Factor A",
+                            breaks=c("High", "Low"),
+                            labels=c("High", "Low")) +
+      scale_shape_discrete(name  ="Factor A",
+                           breaks=c("High", "Low"),
+                           labels=c("High", "Low"))+ labs(title="Interaction plot bewteen Factor A and Factor B")
+#+ xkcdline(aes(xbegin,ybegin, xend,yend),datalines.pltl, xjitteramount = 0.12) 
+ 
+Q3.plot
+```
+
+c) 
+```{r}
+summary(aov(Q3.dat$conduct ~ Q3.dat$A*Q3.dat$B))
+
+```
+
+
+i) Base on the ANOVA table, we have that factor A is significant while factor B seems to be insignifican with the effect of the other factor present. 
+
+```{r}
+(826.6+7.6+ 10.6)/(3*19.7)
+qf(0.95, 3, 12)
+```
+
+Note since $F_{obs}> 3.490295$,there is significant evidence bewteen the variable. 
+
+ii)
+Note since $0.478 > 0.05$ we fail to reject the null hypothesis such that $\gamma_{ij} = 0$
+
+d) 
+For factor B begin low, under the null hyphosis assume factor A is the same.
+Hence we have the following for $H_0$ (let $ct_i$ be coat type i):
+
+$$
+(\hat{ct_1} - \hat{ct_3}) - (\hat{ct_2} - \hat{ct_4}) = 0
+$$
+
+
+```{r}
+theta = (Q3.ll - Q3.hl) - (Q3.lh - Q3.hh)
+theta
+
+```
+from the ANOVA table we have $\sigma^2 = 19.7$
+
+```{r}
+SE <- sqrt(19.7) * sqrt(4/16)
+theta/SE
+
+qt(c(0.025,0.975),12)
+```
+
+Since $|-1.464469| <  2.178813$ We fail to reject the null hyphosis such that the effect of factor A is independent from factor B. 

@@ -1,0 +1,17 @@
+InstanceType: 'p2.xlarge'
+ImageId: 'ami-d1c9cdae'
+MinCount: 1
+MaxCount: 1
+SecurityGroups:
+  - 'jupyter'
+KeyName: 'default'
+InstanceInitiatedShutdownBehavior: 'terminate'
+InstanceMarketOptions:
+  MarketType: 'spot'
+  SpotOptions:
+    MaxPrice: '2'
+TagSpecifications:
+  - ResourceType: 'instance'
+    Tags:
+      - Key: 'Name'
+        Value: 'stat441'
